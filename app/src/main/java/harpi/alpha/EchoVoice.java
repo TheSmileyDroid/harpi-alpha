@@ -44,38 +44,44 @@ public class EchoVoice extends ListenerAdapter {
         return;
       }
 
-      onEchoCommand(event);
-
+      onEchoCommand(event, channel);
     }
 
+    if (message.equals("-leave")) {
+      Member member = event.getMember();
+      if (member == null) {
+        event.getChannel().sendMessage("Você não está em um servidor!").queue();
+        return;
+      }
+      GuildVoiceState voiceState = member.getVoiceState();
+      if (voiceState == null) {
+        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+        return;
+      }
+      AudioChannel channel = voiceState.getChannel();
+      if (channel == null) {
+        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+        return;
+      }
+
+      onLeaveCommand(event, channel);
+    }
   }
 
-  private void onEchoCommand(MessageReceivedEvent event) {
-    Member member = event.getMember();
-    if (member == null) {
-      event.getChannel().sendMessage("Você não está em um servidor!").queue();
-      return;
-    }
-    GuildVoiceState voiceState = member.getVoiceState();
-    if (voiceState == null) {
-      event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
-      return;
-    }
-    AudioChannel channel = voiceState.getChannel();
-    if (channel != null) {
-      connectTo(channel);
-      onConnecting(channel, event.getChannel());
-    } else {
-      onUnknownChannel(event.getChannel(), "null");
-    }
+  private void onEchoCommand(MessageReceivedEvent event, @Nonnull AudioChannel channel) {
+    connectTo(channel);
+    onConnecting(channel, event.getChannel());
+  }
+
+  private void onLeaveCommand(MessageReceivedEvent event, @Nonnull AudioChannel channel) {
+    Guild guild = channel.getGuild();
+    AudioManager audioManager = guild.getAudioManager();
+    audioManager.closeAudioConnection();
+    event.getChannel().sendMessage("Saindo do canal de voz: " + channel.getName()).queue();
   }
 
   private void onConnecting(AudioChannel channel, MessageChannel messageChannel) {
     messageChannel.sendMessage("Conectando ao canal de voz: " + channel.getName()).queue();
-  }
-
-  private void onUnknownChannel(MessageChannel channel, String comment) {
-    channel.sendMessage("Canal de voz desconhecido: " + comment).queue();
   }
 
   private void connectTo(AudioChannel channel) {

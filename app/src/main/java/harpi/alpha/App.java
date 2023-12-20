@@ -3,15 +3,16 @@
  */
 package harpi.alpha;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+    final static Logger logger = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) throws Exception {
         String token = args.length >= 1 ? args[0] : System.getenv("DISCORD_ID");
@@ -24,10 +25,12 @@ public class App {
             System.out.println("Using token: " + token);
         }
 
+        logger.info("Starting harpi...");
+
         JDABuilder.createDefault(token, GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS))
                 .addEventListeners(new EchoVoice())
                 .addEventListeners(new MusicPlayer())
-                .setActivity(Activity.playing("Hello, World!"))
+                .setActivity(Activity.watching("você!"))
                 .enableCache(CacheFlag.VOICE_STATE)
                 .build();
     }

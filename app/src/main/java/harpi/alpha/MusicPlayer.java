@@ -161,8 +161,17 @@ public class MusicPlayer extends ListenerAdapter {
       setVolume(event.getChannel().asGuildMessageChannel(), Integer.parseInt(command[1]));
     }
 
-    if (command[0].equals("list")) {
+    if (command[0].equals("list") || command[0].equals("queue")) {
       getMusicList(event.getChannel().asGuildMessageChannel());
+    }
+
+    if (command[0].equals("loop")) {
+      if (command.length < 2) {
+        event.getChannel().sendMessage("Por favor, forneça o novo loop no formato true/false")
+            .queue();
+        return;
+      }
+      setLoop(event.getChannel().asGuildMessageChannel(), Boolean.parseBoolean(command[1]));
     }
 
     super.onMessageReceived(event);
@@ -214,6 +223,13 @@ public class MusicPlayer extends ListenerAdapter {
     channel.sendMessage("Volume alterado para " + volume).queue();
   }
 
+  private void setLoop(GuildMessageChannel channel, boolean loop) {
+    GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
+    musicManager.scheduler.setLoop(loop);
+
+    channel.sendMessage("Loop alterado para " + loop).queue();
+  }
+
   private void getMusicList(GuildMessageChannel channel) {
     GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
     EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -228,16 +244,24 @@ public class MusicPlayer extends ListenerAdapter {
             }).reduce("", (acc, cur) -> acc + "\n" + cur))
         .setColor(0xffe663);
 
+    AudioTrack playing = musicManager.scheduler.getPlaying();
+    if (playing != null) {
+      String current = String.format("%s - %s (%d:%02d/%d:%02d)", playing.getInfo().title,
+          playing.getInfo().author, playing.getPosition() / 60000,
+          (playing.getPosition() / 1000) % 60, playing.getInfo().length / 60000,
+          (playing.getInfo().length / 1000) % 60);
+      if (current != null)
+        embedBuilder.addField("Playing", current, false);
+      embedBuilder.setImage(playing.getInfo().artworkUrl);
+    }
+
     String volume = String.valueOf(musicManager.player.getVolume());
     if (volume != null)
       embedBuilder.addField("Volume", volume, false);
 
-    AudioTrack playing = musicManager.scheduler.getPlaying();
-    if (playing != null) {
-      String title = playing.getInfo().title;
-      if (title != null)
-        embedBuilder.addField("Tocando agora", title, false);
-    }
+    String loop = String.valueOf(musicManager.scheduler.isLoop());
+    if (loop != null)
+      embedBuilder.addField("Loop", loop, false);
 
     channel.sendMessageEmbeds(embedBuilder.build()).queue();
   }

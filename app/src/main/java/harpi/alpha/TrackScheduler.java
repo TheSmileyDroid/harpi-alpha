@@ -11,6 +11,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 public class TrackScheduler extends AudioEventAdapter {
   private final AudioPlayer player;
   private final BlockingQueue<AudioTrack> queue;
+  private boolean loop = false;
 
   /**
    * @param player The audio player this scheduler uses
@@ -39,7 +40,11 @@ public class TrackScheduler extends AudioEventAdapter {
   @Override
   public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
     if (endReason.mayStartNext) {
-      nextTrack();
+      if (this.loop) {
+        this.player.startTrack(track.makeClone(), false);
+      } else {
+        nextTrack();
+      }
     }
   }
 
@@ -65,5 +70,25 @@ public class TrackScheduler extends AudioEventAdapter {
 
   public AudioTrack getPlaying() {
     return this.player.getPlayingTrack();
+  }
+
+  public boolean isLoop() {
+    return this.loop;
+  }
+
+  public void setLoop(boolean loop) {
+    this.loop = loop;
+  }
+
+  public void clear() {
+    this.queue.clear();
+  }
+
+  public void remove(int index) {
+    this.queue.remove(this.queue.toArray(new AudioTrack[this.queue.size()])[index]);
+  }
+
+  public void remove(AudioTrack track) {
+    this.queue.remove(track);
   }
 }
