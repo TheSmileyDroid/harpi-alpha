@@ -1,4 +1,4 @@
-package harpi.alpha;
+package harpi.alpha.music;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;

@@ -1,4 +1,4 @@
-package harpi.alpha;
+package harpi.alpha.music;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;

@@ -1,4 +1,4 @@
-package harpi.alpha;
+package harpi.alpha.recording;
 
 import java.nio.ByteBuffer;
 import java.util.Queue;

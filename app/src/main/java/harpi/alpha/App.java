@@ -6,6 +6,9 @@ package harpi.alpha;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import harpi.alpha.music.MusicPlayer;
+import harpi.alpha.recording.EchoVoice;
+import harpi.alpha.recording.RecordVoice;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -30,6 +33,7 @@ public class App {
         JDABuilder.createDefault(token, GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS))
                 .addEventListeners(new EchoVoice())
                 .addEventListeners(new MusicPlayer())
+                .addEventListeners(new RecordVoice())
                 .setActivity(Activity.watching("você!"))
                 .enableCache(CacheFlag.VOICE_STATE)
                 .build();

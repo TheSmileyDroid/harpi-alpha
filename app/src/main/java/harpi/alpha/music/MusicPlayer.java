@@ -1,4 +1,4 @@
-package harpi.alpha;
+package harpi.alpha.music;
 
 import java.util.HashMap;
 import java.util.List;
@@ -259,7 +259,12 @@ public class MusicPlayer extends ListenerAdapter {
     if (volume != null)
       embedBuilder.addField("Volume", volume, false);
 
-    String loop = String.valueOf(musicManager.scheduler.isLoop());
+    String loop = "";
+    if (musicManager.scheduler.isLoop())
+      loop = "✅";
+    else
+      loop = "❌";
+
     if (loop != null)
       embedBuilder.addField("Loop", loop, false);
 
