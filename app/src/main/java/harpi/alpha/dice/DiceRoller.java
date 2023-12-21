@@ -4,33 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import javax.annotation.Nonnull;
-
+import harpi.alpha.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-public class DiceRoller extends ListenerAdapter {
-
-  @Override
-  public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-    if (event.getAuthor().isBot()) {
-      return;
-    }
-
-    if (!event.getMessage().getContentRaw().startsWith("-")) {
-      return;
-    }
-
-    String[] command = event.getMessage().getContentRaw().substring(1).split(" ");
-    if (command[0].equals("roll") || command[0].equals("r") || command[0].equals("d")) {
-      if (command.length == 1) {
-        event.getChannel().sendMessage("Você precisa especificar o dado a ser rolado.").queue();
-      } else {
-        onRollCommand(event, String.join(" ", command).substring(command[0].length() + 1));
-      }
-    }
-  }
+public class DiceRoller implements Command {
 
   private void onRollCommand(MessageReceivedEvent event, String input) {
     String finalString;
@@ -201,6 +179,35 @@ public class DiceRoller extends ListenerAdapter {
     }
 
     return total;
+  }
+
+  @Override
+  public String getName() {
+    return "roll";
+  }
+
+  @Override
+  public void execute(MessageReceivedEvent event, String[] command) {
+    if (command.length == 1) {
+      event.getChannel().sendMessage("Você precisa especificar o dado a ser rolado.").queue();
+    } else {
+      onRollCommand(event, String.join(" ", command).substring(command[0].length() + 1));
+    }
+  }
+
+  @Override
+  public boolean isGuildOnly() {
+    return false;
+  }
+
+  @Override
+  public boolean hasAlias() {
+    return true;
+  }
+
+  @Override
+  public String[] getAlias() {
+    return new String[] { "r", "rolar", "d", "dados" };
   }
 
 }

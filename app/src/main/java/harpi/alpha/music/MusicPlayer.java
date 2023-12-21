@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -14,6 +12,8 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
+import harpi.alpha.AbsCommand;
+import harpi.alpha.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -21,10 +21,9 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
 
-public class MusicPlayer extends ListenerAdapter {
+public class MusicPlayer {
   private final AudioPlayerManager playerManager;
   private final Map<Long, GuildMusicManager> musicManagers;
 
@@ -34,6 +33,18 @@ public class MusicPlayer extends ListenerAdapter {
     this.playerManager = new DefaultAudioPlayerManager();
     AudioSourceManagers.registerRemoteSources(playerManager);
     AudioSourceManagers.registerLocalSource(playerManager);
+  }
+
+  public void registerCommands(CommandHandler commandHandler) {
+    commandHandler.registerCommand(new PlayMusic());
+    commandHandler.registerCommand(new StopMusic());
+    commandHandler.registerCommand(new SkipMusic());
+    commandHandler.registerCommand(new PauseMusic());
+    commandHandler.registerCommand(new ResumeMusic());
+    commandHandler.registerCommand(new Random());
+    commandHandler.registerCommand(new ListMusics());
+    commandHandler.registerCommand(new Volume());
+    commandHandler.registerCommand(new Loop());
   }
 
   private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
@@ -94,86 +105,6 @@ public class MusicPlayer extends ListenerAdapter {
         channel.sendMessage("Não foi possível tocar: " + exception.getMessage()).queue();
       }
     });
-  }
-
-  @Override
-  public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-    if (event.getAuthor().isBot()) {
-      return;
-    }
-
-    if (!event.isFromGuild()) {
-      return;
-    }
-
-    if (!event.getMessage().getContentRaw().startsWith("-"))
-      return;
-
-    String[] command = event.getMessage().getContentRaw().substring(1).split(" ");
-
-    if (command[0].equals("play")) {
-      if (command.length < 2) {
-        event.getChannel().sendMessage("Por favor, forneça um link").queue();
-        return;
-      }
-      Member member = event.getMember();
-      if (member == null) {
-        event.getChannel().sendMessage("Você não está em um servidor!").queue();
-        return;
-      }
-      connectToUserVoiceChannel(member);
-
-      loadAndPlay(event.getChannel().asGuildMessageChannel(), command[1]);
-    }
-
-    if (command[0].equals("skip")) {
-      skipTrack(event.getChannel().asGuildMessageChannel());
-    }
-
-    if (command[0].equals("stop")) {
-      stop(event.getChannel().asGuildMessageChannel());
-    }
-
-    if (command[0].equals("pause")) {
-      pause(event.getChannel().asGuildMessageChannel());
-    }
-
-    if (command[0].equals("resume")) {
-      resume(event.getChannel().asGuildMessageChannel());
-    }
-
-    if (command[0].equals("random")) {
-      random(event.getChannel().asGuildMessageChannel());
-    }
-
-    if (command[0].equals("volume")) {
-      if (command.length < 2) {
-        event.getChannel().sendMessage("Por favor, forneça o novo volume no formato 0-100")
-            .queue();
-        return;
-      }
-      if (Integer.parseInt(command[1]) < 0 || Integer.parseInt(command[1]) > 100) {
-        event.getChannel().sendMessage("Por favor, forneça o novo volume no formato 0-100")
-            .queue();
-        return;
-      }
-      setVolume(event.getChannel().asGuildMessageChannel(), Integer.parseInt(command[1]));
-    }
-
-    if (command[0].equals("list") || command[0].equals("queue")) {
-      getMusicList(event.getChannel().asGuildMessageChannel());
-    }
-
-    if (command[0].equals("loop")) {
-      if (command.length < 2) {
-        event.getChannel().sendMessage("Por favor, forneça o novo loop no formato true/false")
-            .queue();
-        return;
-      }
-      setLoop(event.getChannel().asGuildMessageChannel(), Boolean.parseBoolean(command[1]));
-    }
-
-    super.onMessageReceived(event);
   }
 
   private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
@@ -286,4 +217,159 @@ public class MusicPlayer extends ListenerAdapter {
       audioManager.openAudioConnection(channel);
     }
   }
+
+  public class PlayMusic extends AbsCommand {
+    @Override
+    public String getName() {
+      return "play";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      connectToUserVoiceChannel(event.getMember());
+      loadAndPlay(event.getChannel().asGuildMessageChannel(), command[1]);
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class SkipMusic extends AbsCommand {
+    @Override
+    public String getName() {
+      return "skip";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      skipTrack(event.getChannel().asGuildMessageChannel());
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class StopMusic extends AbsCommand {
+    @Override
+    public String getName() {
+      return "stop";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      stop(event.getChannel().asGuildMessageChannel());
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class PauseMusic extends AbsCommand {
+    @Override
+    public String getName() {
+      return "pause";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      pause(event.getChannel().asGuildMessageChannel());
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class ResumeMusic extends AbsCommand {
+    @Override
+    public String getName() {
+      return "resume";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      resume(event.getChannel().asGuildMessageChannel());
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class Random extends AbsCommand {
+    @Override
+    public String getName() {
+      return "random";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      random(event.getChannel().asGuildMessageChannel());
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class Volume extends AbsCommand {
+    @Override
+    public String getName() {
+      return "volume";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      setVolume(event.getChannel().asGuildMessageChannel(), Integer.parseInt(command[1]));
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class ListMusics extends AbsCommand {
+    @Override
+    public String getName() {
+      return "list";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      getMusicList(event.getChannel().asGuildMessageChannel());
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
+  public class Loop extends AbsCommand {
+    @Override
+    public String getName() {
+      return "loop";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      setLoop(event.getChannel().asGuildMessageChannel(), Boolean.parseBoolean(command[1]));
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+  }
+
 }

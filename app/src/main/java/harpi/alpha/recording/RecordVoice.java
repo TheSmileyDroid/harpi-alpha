@@ -37,11 +37,41 @@ public class RecordVoice extends ListenerAdapter {
 
       onRecordCommand(event, channel);
     }
+
+    if (message.equals("-stop")) {
+      Member member = event.getMember();
+      if (member == null) {
+        event.getChannel().sendMessage("Você não está em um servidor!").queue();
+        return;
+      }
+      GuildVoiceState voiceState = member.getVoiceState();
+      if (voiceState == null) {
+        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+        return;
+      }
+      AudioChannel channel = voiceState.getChannel();
+      if (channel == null) {
+        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+        return;
+      }
+      event.getChannel().sendMessage("Parando...").queue();
+
+      onStopCommand(event, channel);
+    }
   }
 
   private void onRecordCommand(MessageReceivedEvent event, AudioChannel channel) {
     AudioManager audioManager = channel.getGuild().getAudioManager();
     audioManager.openAudioConnection(channel);
     audioManager.setReceivingHandler(new RecordHandler());
+  }
+
+  private void onStopCommand(MessageReceivedEvent event, AudioChannel channel) {
+    AudioManager audioManager = channel.getGuild().getAudioManager();
+    RecordHandler handler = (RecordHandler) audioManager.getReceivingHandler();
+    if (handler != null) {
+      handler.stop();
+    }
+    audioManager.closeAudioConnection();
   }
 }
