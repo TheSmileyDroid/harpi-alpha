@@ -110,7 +110,6 @@ public class MusicPlayer extends ListenerAdapter {
       return;
 
     String[] command = event.getMessage().getContentRaw().substring(1).split(" ");
-    System.out.println(command[0]);
 
     if (command[0].equals("play")) {
       if (command.length < 2) {

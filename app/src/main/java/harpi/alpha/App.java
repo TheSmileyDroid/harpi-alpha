@@ -6,6 +6,7 @@ package harpi.alpha;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import harpi.alpha.dice.DiceRoller;
 import harpi.alpha.music.MusicPlayer;
 import harpi.alpha.recording.EchoVoice;
 import harpi.alpha.recording.RecordVoice;
@@ -34,6 +35,7 @@ public class App {
                 .addEventListeners(new EchoVoice())
                 .addEventListeners(new MusicPlayer())
                 .addEventListeners(new RecordVoice())
+                .addEventListeners(new DiceRoller())
                 .setActivity(Activity.watching("você!"))
                 .enableCache(CacheFlag.VOICE_STATE)
                 .build();

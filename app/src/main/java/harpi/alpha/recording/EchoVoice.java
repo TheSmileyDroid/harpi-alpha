@@ -66,6 +66,7 @@ public class EchoVoice extends ListenerAdapter {
 
       onLeaveCommand(event, channel);
     }
+
   }
 
   private void onEchoCommand(MessageReceivedEvent event, @Nonnull AudioChannel channel) {
