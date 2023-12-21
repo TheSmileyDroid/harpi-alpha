@@ -4,11 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import harpi.alpha.Command;
+import javax.annotation.Nonnull;
+
+import harpi.alpha.AbsCommand;
+import harpi.alpha.CommandGroup;
+import harpi.alpha.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-public class DiceRoller implements Command {
+public class DiceRoller implements CommandGroup {
 
   private void onRollCommand(MessageReceivedEvent event, String input) {
     String finalString;
@@ -119,6 +123,12 @@ public class DiceRoller implements Command {
 
       if (command.contains("d")) {
         String[] parts = command.split("d");
+        if (parts[0].isEmpty()) {
+          parts[0] = "1";
+        }
+        if (parts[1].isEmpty()) {
+          parts[1] = "6";
+        }
         int count = Integer.parseInt(parts[0]);
         int sides = Integer.parseInt(parts[1]);
         diceCommands.add(new DiceCommandImpl(count, sides, multiplier));
@@ -181,33 +191,40 @@ public class DiceRoller implements Command {
     return total;
   }
 
-  @Override
-  public String getName() {
-    return "roll";
-  }
+  class DiceRoll extends AbsCommand {
+    @Override
+    public String getName() {
+      return "roll";
+    }
 
-  @Override
-  public void execute(MessageReceivedEvent event, String[] command) {
-    if (command.length == 1) {
-      event.getChannel().sendMessage("Você precisa especificar o dado a ser rolado.").queue();
-    } else {
-      onRollCommand(event, String.join(" ", command).substring(command[0].length() + 1));
+    @Override
+    public void execute(MessageReceivedEvent event, String[] command) {
+      if (command.length == 1) {
+        event.getChannel().sendMessage("Você precisa especificar o dado a ser rolado.").queue();
+      } else {
+        onRollCommand(event, String.join(" ", command).substring(command[0].length() + 1));
+      }
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return false;
+    }
+
+    @Override
+    public boolean hasAlias() {
+      return true;
+    }
+
+    @Override
+    public String[] getAlias() {
+      return new String[] { "r", "rolar", "d", "dados" };
     }
   }
 
   @Override
-  public boolean isGuildOnly() {
-    return false;
-  }
-
-  @Override
-  public boolean hasAlias() {
-    return true;
-  }
-
-  @Override
-  public String[] getAlias() {
-    return new String[] { "r", "rolar", "d", "dados" };
+  public void registerCommands(@Nonnull CommandHandler handler) {
+    handler.registerCommand(new DiceRoll());
   }
 
 }

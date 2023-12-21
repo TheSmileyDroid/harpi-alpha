@@ -6,6 +6,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.annotation.Nonnull;
 
+import harpi.alpha.AbsCommand;
+import harpi.alpha.CommandGroup;
+import harpi.alpha.CommandHandler;
 import net.dv8tion.jda.api.audio.AudioReceiveHandler;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.audio.CombinedAudio;
@@ -15,19 +18,14 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
 
-public class EchoVoice extends ListenerAdapter {
+public class EchoVoice implements CommandGroup {
 
-  @Override
-  public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-    if (event.getAuthor().isBot()) {
-      return;
-    }
+  class Echo extends AbsCommand {
 
-    String message = event.getMessage().getContentRaw();
-    if (message.equals("-echo")) {
+    @Override
+    public void execute(MessageReceivedEvent event, String[] args) {
       Member member = event.getMember();
       if (member == null) {
         event.getChannel().sendMessage("Você não está em um servidor!").queue();
@@ -44,10 +42,20 @@ public class EchoVoice extends ListenerAdapter {
         return;
       }
 
-      onEchoCommand(event, channel);
+      connectTo(channel);
+      onConnecting(channel, event.getChannel());
     }
 
-    if (message.equals("-leave")) {
+    @Override
+    public String getName() {
+      return "echo";
+    }
+  }
+
+  class Leave extends AbsCommand {
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] args) {
       Member member = event.getMember();
       if (member == null) {
         event.getChannel().sendMessage("Você não está em um servidor!").queue();
@@ -64,21 +72,16 @@ public class EchoVoice extends ListenerAdapter {
         return;
       }
 
-      onLeaveCommand(event, channel);
+      Guild guild = channel.getGuild();
+      AudioManager audioManager = guild.getAudioManager();
+      audioManager.closeAudioConnection();
+      event.getChannel().sendMessage("Saindo do canal de voz: " + channel.getName()).queue();
     }
 
-  }
-
-  private void onEchoCommand(MessageReceivedEvent event, @Nonnull AudioChannel channel) {
-    connectTo(channel);
-    onConnecting(channel, event.getChannel());
-  }
-
-  private void onLeaveCommand(MessageReceivedEvent event, @Nonnull AudioChannel channel) {
-    Guild guild = channel.getGuild();
-    AudioManager audioManager = guild.getAudioManager();
-    audioManager.closeAudioConnection();
-    event.getChannel().sendMessage("Saindo do canal de voz: " + channel.getName()).queue();
+    @Override
+    public String getName() {
+      return "leave";
+    }
   }
 
   private void onConnecting(AudioChannel channel, MessageChannel messageChannel) {
@@ -127,5 +130,11 @@ public class EchoVoice extends ListenerAdapter {
     public boolean isOpus() {
       return false;
     }
+  }
+
+  @Override
+  public void registerCommands(@Nonnull CommandHandler handler) {
+    handler.registerCommand(new Echo());
+    handler.registerCommand(new Leave());
   }
 }

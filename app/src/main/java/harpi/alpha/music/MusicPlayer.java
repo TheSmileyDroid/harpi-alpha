@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -13,6 +15,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import harpi.alpha.AbsCommand;
+import harpi.alpha.CommandGroup;
 import harpi.alpha.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -23,7 +26,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
-public class MusicPlayer {
+public class MusicPlayer implements CommandGroup {
   private final AudioPlayerManager playerManager;
   private final Map<Long, GuildMusicManager> musicManagers;
 
@@ -35,7 +38,7 @@ public class MusicPlayer {
     AudioSourceManagers.registerLocalSource(playerManager);
   }
 
-  public void registerCommands(CommandHandler commandHandler) {
+  public void registerCommands(@Nonnull CommandHandler commandHandler) {
     commandHandler.registerCommand(new PlayMusic());
     commandHandler.registerCommand(new StopMusic());
     commandHandler.registerCommand(new SkipMusic());

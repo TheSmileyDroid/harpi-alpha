@@ -2,27 +2,44 @@ package server;
 
 import javax.annotation.Nonnull;
 
+import harpi.alpha.AbsCommand;
+import harpi.alpha.CommandGroup;
+import harpi.alpha.CommandHandler;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-public class BasicCommands extends ListenerAdapter {
+public class BasicCommands implements CommandGroup {
 
   @Override
-  public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-    if (event.getAuthor().isBot()) {
-      return;
-    }
+  public void registerCommands(@Nonnull CommandHandler handler) {
+    handler.registerCommand(new Shutdown());
+    handler.registerCommand(new Ping());
+  }
 
-    String message = event.getMessage().getContentRaw();
-    if (message.equals("-shutdown")) {
+  class Shutdown extends AbsCommand {
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] args) {
       event.getChannel().sendMessage("Desligando...").queue();
       System.exit(0);
     }
 
-    if (message.equals("-ping")) {
+    @Override
+    public String getName() {
+      return "shutdown";
+    }
+  }
+
+  class Ping extends AbsCommand {
+
+    @Override
+    public void execute(MessageReceivedEvent event, String[] args) {
       event.getChannel().sendMessage("Pong!").queue();
     }
 
+    @Override
+    public String getName() {
+      return "ping";
+    }
   }
 
 }

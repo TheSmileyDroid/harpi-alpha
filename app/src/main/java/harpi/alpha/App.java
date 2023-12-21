@@ -8,10 +8,12 @@ import org.slf4j.LoggerFactory;
 
 import harpi.alpha.dice.DiceRoller;
 import harpi.alpha.music.MusicPlayer;
+import harpi.alpha.recording.EchoVoice;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import server.BasicCommands;
 
 public class App {
     final static Logger logger = LoggerFactory.getLogger(App.class);
@@ -31,8 +33,13 @@ public class App {
 
         CommandHandler commandHandler = new CommandHandler();
         MusicPlayer musicPlayer = new MusicPlayer();
-        commandHandler.registerCommand(new DiceRoller());
+        BasicCommands basicCommands = new BasicCommands();
+        DiceRoller diceRoller = new DiceRoller();
+        EchoVoice echoVoice = new EchoVoice();
         musicPlayer.registerCommands(commandHandler);
+        basicCommands.registerCommands(commandHandler);
+        diceRoller.registerCommands(commandHandler);
+        echoVoice.registerCommands(commandHandler);
 
         JDABuilder.createDefault(token, GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS))
                 .addEventListeners(commandHandler)
