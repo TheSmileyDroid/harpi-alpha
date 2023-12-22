@@ -1,6 +1,7 @@
 package harpi.alpha;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -30,7 +31,9 @@ public class CommandHandler extends ListenerAdapter {
         return;
       }
 
-      command.execute(event, commandArgs);
+      List<String> args = List.of(commandArgs);
+
+      command.execute(event, args);
     } else {
       event.getChannel().sendMessage("Comando não encontrado.").queue();
     }

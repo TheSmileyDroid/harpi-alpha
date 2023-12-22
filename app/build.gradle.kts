@@ -25,6 +25,7 @@ dependencies {
 
     implementation ("dev.arbjerg:lavaplayer:2.0.4")
 
+    implementation("javazoom:jlayer:1.0.1")
 
 }
 

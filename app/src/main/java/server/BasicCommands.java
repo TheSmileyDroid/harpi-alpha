@@ -1,5 +1,7 @@
 package server;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
 
 import harpi.alpha.AbsCommand;
@@ -18,7 +20,7 @@ public class BasicCommands implements CommandGroup {
   class Shutdown extends AbsCommand {
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] args) {
+    public void execute(MessageReceivedEvent event, List<String> args) {
       event.getChannel().sendMessage("Desligando...").queue();
       System.exit(0);
     }
@@ -32,7 +34,7 @@ public class BasicCommands implements CommandGroup {
   class Ping extends AbsCommand {
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] args) {
+    public void execute(MessageReceivedEvent event, List<String> args) {
       event.getChannel().sendMessage("Pong!").queue();
     }
 

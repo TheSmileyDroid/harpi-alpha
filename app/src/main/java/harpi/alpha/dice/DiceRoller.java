@@ -198,11 +198,11 @@ public class DiceRoller implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
-      if (command.length == 1) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
+      if (command.size() == 1) {
         event.getChannel().sendMessage("Você precisa especificar o dado a ser rolado.").queue();
       } else {
-        onRollCommand(event, String.join(" ", command).substring(command[0].length() + 1));
+        onRollCommand(event, command.subList(1, command.size()).toString());
       }
     }
 

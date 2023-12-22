@@ -1,5 +1,8 @@
 package harpi.alpha.recording;
 
+import java.io.File;
+import java.util.List;
+
 import javax.annotation.Nonnull;
 
 import harpi.alpha.AbsCommand;
@@ -10,6 +13,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
+import net.dv8tion.jda.api.utils.FileUpload;
 
 public class RecordVoice implements CommandGroup {
 
@@ -23,15 +27,30 @@ public class RecordVoice implements CommandGroup {
     AudioManager audioManager = channel.getGuild().getAudioManager();
     RecordHandler handler = (RecordHandler) audioManager.getReceivingHandler();
     if (handler != null) {
-      handler.stop();
+      String filename = handler.stop();
+
+      String filenameConverted = filename.replace(".wav", ".mp3");
+
+      // Convert to mp3 using ffmpeg; 48KHz 16bit stereo signed BigEndian PCM.
+      String[] cmd = { "ffmpeg", "-y", "-i", filename, "-f", "mp3",
+          "-acodec", "libmp3lame", filenameConverted };
+      try {
+        Process p = Runtime.getRuntime().exec(cmd);
+        p.waitFor();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
+      File file = new File(filenameConverted);
+      event.getChannel().sendFiles(FileUpload.fromData(file)).queue();
     }
-    audioManager.closeAudioConnection();
+
   }
 
   class Record extends AbsCommand {
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] args) {
+    public void execute(MessageReceivedEvent event, List<String> args) {
       Member member = event.getMember();
       if (member == null) {
         event.getChannel().sendMessage("Você não está em um servidor!").queue();
@@ -61,7 +80,7 @@ public class RecordVoice implements CommandGroup {
   class StopRecord extends AbsCommand {
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] args) {
+    public void execute(MessageReceivedEvent event, List<String> args) {
       Member member = event.getMember();
       if (member == null) {
         event.getChannel().sendMessage("Você não está em um servidor!").queue();

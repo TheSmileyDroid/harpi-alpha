@@ -1,9 +1,11 @@
 package harpi.alpha;
 
+import java.util.List;
+
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public abstract class AbsCommand implements Command {
-  public abstract void execute(MessageReceivedEvent event, String[] args);
+  public abstract void execute(MessageReceivedEvent event, List<String> args);
 
   public abstract String getName();
 

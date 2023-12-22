@@ -64,6 +64,43 @@ public class MusicPlayer implements CommandGroup {
     return musicManager;
   }
 
+  public void playInternal(MessageReceivedEvent event, GuildMessageChannel channel, String trackUrl) {
+    connectToUserVoiceChannel(event.getMember());
+    GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
+
+    playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
+      @Override
+      public void trackLoaded(AudioTrack track) {
+        play(channel.getGuild(), musicManager, track);
+      }
+
+      @Override
+      public void playlistLoaded(AudioPlaylist playlist) {
+        AudioTrack track = playlist.getSelectedTrack();
+
+        if (track == null) {
+          List<AudioTrack> tracks = playlist.getTracks();
+
+          for (AudioTrack audioTrack : tracks) {
+            play(channel.getGuild(), musicManager, audioTrack);
+          }
+        } else {
+          play(channel.getGuild(), musicManager, track);
+        }
+      }
+
+      @Override
+      public void noMatches() {
+        channel.sendMessage("Nada encontrado para " + trackUrl).queue();
+      }
+
+      @Override
+      public void loadFailed(FriendlyException exception) {
+        channel.sendMessage("Não foi possível tocar: " + exception.getMessage()).queue();
+      }
+    });
+  }
+
   private void loadAndPlay(final GuildMessageChannel channel, final String trackUrl) {
     GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
 
@@ -228,9 +265,9 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
       connectToUserVoiceChannel(event.getMember());
-      loadAndPlay(event.getChannel().asGuildMessageChannel(), command[1]);
+      loadAndPlay(event.getChannel().asGuildMessageChannel(), String.join(" ", command.subList(1, command.size())));
     }
 
     @Override
@@ -246,7 +283,7 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
       skipTrack(event.getChannel().asGuildMessageChannel());
     }
 
@@ -263,7 +300,7 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
       stop(event.getChannel().asGuildMessageChannel());
     }
 
@@ -280,7 +317,7 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
       pause(event.getChannel().asGuildMessageChannel());
     }
 
@@ -297,7 +334,7 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
       resume(event.getChannel().asGuildMessageChannel());
     }
 
@@ -314,7 +351,7 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
       random(event.getChannel().asGuildMessageChannel());
     }
 
@@ -331,8 +368,8 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
-      setVolume(event.getChannel().asGuildMessageChannel(), Integer.parseInt(command[1]));
+    public void execute(MessageReceivedEvent event, List<String> command) {
+      setVolume(event.getChannel().asGuildMessageChannel(), Integer.parseInt(command.get(1)));
     }
 
     @Override
@@ -348,7 +385,7 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
+    public void execute(MessageReceivedEvent event, List<String> command) {
       getMusicList(event.getChannel().asGuildMessageChannel());
     }
 
@@ -365,8 +402,8 @@ public class MusicPlayer implements CommandGroup {
     }
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] command) {
-      setLoop(event.getChannel().asGuildMessageChannel(), Boolean.parseBoolean(command[1]));
+    public void execute(MessageReceivedEvent event, List<String> command) {
+      setLoop(event.getChannel().asGuildMessageChannel(), Boolean.parseBoolean(command.get(1)));
     }
 
     @Override

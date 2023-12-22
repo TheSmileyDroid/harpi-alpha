@@ -1,6 +1,7 @@
 package harpi.alpha.recording;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -25,7 +26,7 @@ public class EchoVoice implements CommandGroup {
   class Echo extends AbsCommand {
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] args) {
+    public void execute(MessageReceivedEvent event, List<String> args) {
       Member member = event.getMember();
       if (member == null) {
         event.getChannel().sendMessage("Você não está em um servidor!").queue();
@@ -55,7 +56,7 @@ public class EchoVoice implements CommandGroup {
   class Leave extends AbsCommand {
 
     @Override
-    public void execute(MessageReceivedEvent event, String[] args) {
+    public void execute(MessageReceivedEvent event, List<String> args) {
       Member member = event.getMember();
       if (member == null) {
         event.getChannel().sendMessage("Você não está em um servidor!").queue();
