@@ -267,7 +267,8 @@ public class MusicPlayer implements CommandGroup {
     @Override
     public void execute(MessageReceivedEvent event, List<String> command) {
       connectToUserVoiceChannel(event.getMember());
-      loadAndPlay(event.getChannel().asGuildMessageChannel(), String.join(" ", command.subList(1, command.size())));
+      loadAndPlay(event.getChannel().asGuildMessageChannel(),
+          String.join(" ", command.subList(1, command.size())).trim());
     }
 
     @Override
