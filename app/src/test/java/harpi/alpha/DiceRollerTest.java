@@ -1,62 +1,114 @@
 package harpi.alpha;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import harpi.alpha.dice.DiceCommand;
 import harpi.alpha.dice.DiceRoller;
+import harpi.alpha.dice.extra.RollResult;
 
 class DiceRollerTest {
 
   @Test
-  void testRollDie() {
-    int result = DiceRoller.rollDie(6);
-    assertTrue(result >= 1 && result <= 6, "Invalid dice roll result");
+  void testComponentCount() {
+    RollResult result = DiceRoller.roll("d6");
+    assert result.getComponents().size() == 1;
   }
 
   @Test
-  void testSplitCommandsLenght() {
-    String input = "2d6+3";
-    String[] commands = DiceRoller.splitCommands(input);
-    assertEquals(2, commands.length, "Invalid number of commands");
-  }
-
-  @Test
-  void testSplitCommandsValues() {
-    String input = "2d6+3+1d4";
-    String[] commands = DiceRoller.splitCommands(input);
-    assertEquals("+2d6", commands[0], "Invalid command value");
-  }
-
-  @Test
-  void testParseInput() {
-    String input = "2d6+3";
-    List<DiceCommand> diceCommands = DiceRoller.parseInput(input);
-    assertEquals(2, diceCommands.size(), "Invalid number of dice commands");
-  }
-
-  @Test
-  void testParseInputMultipleCommands() {
-    String input = "2d6+3+1d4";
-    List<DiceCommand> diceCommands = DiceRoller.parseInput(input);
-    assertEquals(3, diceCommands.size(), "Invalid number of dice commands");
-  }
-
-  @Test
-  void testParseInputNegativeCommands() {
-    String input = "2d6+3-1d4";
-    List<DiceCommand> diceCommands = DiceRoller.parseInput(input);
-    assertEquals(-1, diceCommands.get(2).getOperator(), "Invalid dice command multiplier");
+  void testComponentCount2() {
+    RollResult result = DiceRoller.roll("1d6+1d6");
+    assert result.getComponents().size() == 2;
   }
 
   @Test
   void testRoll() {
-    String input = "2d6+3";
-    int result = DiceRoller.onlyResultRoll(input);
-    assertTrue(result >= 5 && result <= 15, "Invalid roll result");
+    RollResult result = DiceRoller.roll("d6");
+    assert result.getTotal() >= 1 && result.getTotal() <= 6;
+  }
+
+  @Test
+  void testRoll2() {
+    RollResult result = DiceRoller.roll("1d6+1d6");
+    assert result.getTotal() >= 2 && result.getTotal() <= 12;
+  }
+
+  @Test
+  void testNegativeRoll() {
+    RollResult result = DiceRoller.roll("-1d6");
+    assert result.getTotal() >= -6 && result.getTotal() <= -1;
+  }
+
+  @Test
+  void testNegativeRoll2() {
+    RollResult result = DiceRoller.roll("-1d6+1d6");
+    assert result.getTotal() >= -5 && result.getTotal() <= 5;
+  }
+
+  @Test
+  void testRollWithModifier() {
+    RollResult result = DiceRoller.roll("d6+1");
+    assert result.getTotal() >= 2 && result.getTotal() <= 7;
+  }
+
+  @Test
+  void testRollWithModifier2() {
+    RollResult result = DiceRoller.roll("1d6+1d6+1");
+    assert result.getTotal() >= 3 && result.getTotal() <= 13;
+  }
+
+  @Test
+  void testNegativeRollWithModifier() {
+    RollResult result = DiceRoller.roll("d6-1");
+    assert result.getTotal() >= 0 && result.getTotal() <= 5;
+  }
+
+  @Test
+  void testWithSpaces() {
+    RollResult result = DiceRoller.roll("1d6 + 1d6");
+    assert result.getTotal() >= 2 && result.getTotal() <= 12;
+  }
+
+  @Test
+  void testWithSpaces2() {
+    RollResult result = DiceRoller.roll("1d6 + 1d6 + 1");
+    assert result.getTotal() >= 3 && result.getTotal() <= 13;
+  }
+
+  @Test
+  void testMultipleSameRoll() {
+    RollResult[] result = DiceRoller.multiRoll("1d6", 2);
+    assert result.length == 2;
+  }
+
+  @Test
+  void testMultipleSameRoll2() {
+    RollResult[] result = DiceRoller.multiRoll("1d6", 2);
+    assert result[0].getTotal() >= 1 && result[0].getTotal() <= 6;
+    assert result[1].getTotal() >= 1 && result[1].getTotal() <= 6;
+  }
+
+  @Test
+  void testStringOutput() {
+    RollResult result = DiceRoller.roll("1d1");
+    assertEquals("1d1[1]", result.getResult());
+  }
+
+  @Test
+  void testStringOutput2() {
+    RollResult result = DiceRoller.roll("1d1+1d1");
+    assertEquals("1d1[1] + 1d1[1]", result.getResult());
+  }
+
+  @Test
+  void testStringOutput3() {
+    RollResult result = DiceRoller.roll("1d1+1d1+1");
+    assertEquals("1d1[1] + 1d1[1] + 1", result.getResult());
+  }
+
+  @Test
+  void testStringOutput4() {
+    RollResult result = DiceRoller.roll("1d1-1d1");
+    assertEquals("1d1[1] - 1d1[1]", result.getResult());
   }
 }

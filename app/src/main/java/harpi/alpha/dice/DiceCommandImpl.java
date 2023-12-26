@@ -1,9 +1,10 @@
 package harpi.alpha.dice;
 
-public class DiceCommandImpl implements DiceCommand {
+public class DiceCommandImpl implements DiceComponent {
   private int numberOfDices;
   private int numberOfSides;
   private int operator;
+  private int[] results;
 
   public DiceCommandImpl(int numberOfDices, int numberOfSides, int operator) {
     this.numberOfDices = numberOfDices;
@@ -12,14 +13,14 @@ public class DiceCommandImpl implements DiceCommand {
   }
 
   @Override
-  public int[] roll() {
+  public void roll() {
     int[] results = new int[numberOfDices];
 
     for (int i = 0; i < numberOfDices; i++) {
       results[i] = DiceRoller.rollDie(numberOfSides);
     }
 
-    return results;
+    this.results = results;
   }
 
   public int getNumberOfDices() {
@@ -35,20 +36,35 @@ public class DiceCommandImpl implements DiceCommand {
     return operator;
   }
 
-  @Override
-  public int getNumber() {
-    return 0;
-  }
-
   public String toString() {
     if (operator < 0) {
       return String.format("- %dd%d", numberOfDices, numberOfSides);
     }
-    return String.format("+ %dd%d", numberOfDices, numberOfSides);
+    return String.format("%dd%d", numberOfDices, numberOfSides);
   }
 
   @Override
-  public boolean isNumberOnly() {
-    return false;
+  public String getResult() {
+    StringBuilder result = new StringBuilder();
+    result.append(toString());
+    result.append("[");
+    for (int i = 0; i < results.length; i++) {
+      if (i > 0) {
+        result.append(", ");
+      }
+      result.append(results[i]);
+    }
+    result.append("]");
+    return result.toString();
   }
+
+  @Override
+  public int getTotal() {
+    int total = 0;
+    for (int i = 0; i < results.length; i++) {
+      total += results[i];
+    }
+    return total * operator;
+  }
+
 }

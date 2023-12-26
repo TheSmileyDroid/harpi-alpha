@@ -21,7 +21,7 @@ dependencies {
 
     implementation("net.dv8tion:JDA:$jdaVersion")
 
-    implementation("ch.qos.logback:logback-classic:1.2.8")
+    implementation("ch.qos.logback:logback-classic:1.4.14")
 
     implementation ("dev.arbjerg:lavaplayer:2.0.4")
 

@@ -3,70 +3,59 @@ package harpi.alpha.dice;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
 import harpi.alpha.AbsCommand;
 import harpi.alpha.CommandGroup;
 import harpi.alpha.CommandHandler;
+import harpi.alpha.dice.extra.RollResult;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public class DiceRoller implements CommandGroup {
 
-  private void onRollCommand(MessageReceivedEvent event, String input) {
+  private void onRollCommand(MessageReceivedEvent event, String input) throws Exception {
     String finalString;
     if (input.contains("#")) {
       String[] parts = input.split("#");
       int count = Integer.parseInt(parts[0]);
-      boolean isNegative = count <= 0;
-      if (isNegative) {
-        count = Math.abs(count - 2);
+      if (count > 70) {
+        throw new IllegalArgumentException("Não é possível rolar mais de 70 dados.");
       }
-      int max = 0;
-      int min = 0;
-
-      String diceString = parts[1];
-      RollResult[] results = new RollResult[count];
-      StringBuilder result = new StringBuilder();
-      for (int i = 0; i < count; i++) {
-        RollResult rollResult = roll(diceString);
-        results[i] = rollResult;
-        if (i == 0) {
-          max = rollResult.getTotal();
-          min = rollResult.getTotal();
-        } else {
-          if (rollResult.getTotal() > max) {
-            max = rollResult.getTotal();
-          }
-          if (rollResult.getTotal() < min) {
-            min = rollResult.getTotal();
-          }
-        }
+      boolean hightlightBest = true;
+      if (count < 1) {
+        hightlightBest = false;
+        count = Math.abs(count) + 2;
       }
-
-      for (int i = 0; i < count; i++) {
-        RollResult rollResult = results[i];
-        if (rollResult.getTotal() == max && !isNegative) {
-          result.append("**");
+      RollResult[] results = multiRoll(parts[1], count);
+      finalString = "";
+      for (int i = 0; i < results.length; i++) {
+        if (i > 0) {
+          finalString += "\n";
         }
-        if (rollResult.getTotal() == min && isNegative) {
-          result.append("**");
+        if (hightlightBest && RollResult.isBestRoll(results, i)) {
+          finalString += "**";
+        } else if (!hightlightBest && RollResult.isWorstRoll(results, i)) {
+          finalString += "**";
         }
-        result.append(rollResult.getResult());
-
-        if (rollResult.getTotal() == max && !isNegative) {
-          result.append("**");
+        finalString += results[i].getResult();
+        finalString += " = ";
+        finalString += results[i].getTotal();
+        if (hightlightBest && RollResult.isBestRoll(results, i)) {
+          finalString += "**";
+        } else if (!hightlightBest && RollResult.isWorstRoll(results, i)) {
+          finalString += "**";
         }
-        if (rollResult.getTotal() == min && isNegative) {
-          result.append("**");
-        }
-        result.append("\n");
       }
 
-      finalString = result.toString();
     } else {
-      finalString = roll(input).getResult();
+      RollResult rollResult = roll(input);
+      finalString = rollResult.getResult();
+      finalString += " = ";
+      finalString += rollResult.getTotal();
     }
 
     EmbedBuilder embed = new EmbedBuilder();
@@ -81,45 +70,40 @@ public class DiceRoller implements CommandGroup {
     return random.nextInt(sides) + 1;
   }
 
-  public static String[] splitCommands(String input) {
-    int size = input.length();
-    List<String> commands = new ArrayList<>();
-    StringBuilder command = new StringBuilder();
+  public static List<String> splitInput(String input) {
+    Pattern pattern = Pattern.compile("([^+-]+)|(\\+|-)");
+    Matcher matcher = pattern.matcher(input);
 
-    if (input.charAt(0) != '+' && input.charAt(0) != '-') {
-      command.append('+');
-    }
-
-    for (int i = 0; i < size; i++) {
-      char c = input.charAt(i);
-      if (c == '+' || c == '-') {
-        commands.add(command.toString());
-        command = new StringBuilder();
+    List<String> result = new ArrayList<>();
+    while (matcher.find()) {
+      if (!matcher.group().isEmpty()) {
+        result.add(matcher.group().trim());
       }
-      command.append(c);
     }
 
-    commands.add(command.toString());
-
-    return commands.toArray(new String[0]);
+    return result;
   }
 
-  public static List<DiceCommand> parseInput(String input) {
-    List<DiceCommand> diceCommands = new ArrayList<>();
+  public static List<RollComponent> parseInput(String input) {
+    List<RollComponent> diceCommands = new ArrayList<>();
 
-    String[] commands = splitCommands(input);
+    List<String> commands = splitInput(input);
 
-    for (String command : commands) {
-      if (command.isEmpty()) {
+    for (int i = 0; i < commands.size(); i++) {
+      String command = commands.get(i);
+      if (command.isEmpty() || command.equals("+") || command.equals("-")) {
         continue;
       }
 
-      String signal = command.substring(0, 1);
-      if (signal.equals("+") || signal.equals("-")) {
-        command = command.substring(1);
+      String signal = "+";
+      if (i != 0) {
+        signal = commands.get(i - 1);
+        if (signal == null || !(signal.equals("+") || signal.equals("-"))) {
+          signal = "+";
+        }
       }
 
-      int multiplier = signal.equals("+") ? 1 : -1;
+      int multiplier = signal.equals("-") ? -1 : 1;
 
       if (command.contains("d")) {
         String[] parts = command.split("d");
@@ -134,7 +118,7 @@ public class DiceRoller implements CommandGroup {
         diceCommands.add(new DiceCommandImpl(count, sides, multiplier));
       } else {
         int number = Integer.parseInt(command);
-        diceCommands.add(NumberCommand.of(number, multiplier));
+        diceCommands.add(NumberComponent.of(number, multiplier));
       }
     }
 
@@ -142,53 +126,10 @@ public class DiceRoller implements CommandGroup {
   }
 
   public static RollResult roll(String input) {
-    List<DiceCommand> command = parseInput(input);
+    List<RollComponent> command = parseInput(input);
+    RollResult result = new RollResult(command);
 
-    StringBuilder result = new StringBuilder();
-    int total = 0;
-
-    for (int i = 0; i < command.size(); i++) {
-      DiceCommand diceCommand = command.get(i);
-      result.append(diceCommand.toString());
-      if (diceCommand.isNumberOnly()) {
-        total += diceCommand.roll()[0] * diceCommand.getOperator();
-        continue;
-      }
-      result.append("[");
-      for (int j = 0; j < diceCommand.getNumberOfDices(); j++) {
-        int value = diceCommand.roll()[j];
-        total += value * diceCommand.getOperator();
-        if (value == 1 || value == diceCommand.getNumberOfSides()) {
-          result.append("**");
-        }
-        result.append(value);
-        if (value == 1 || value == diceCommand.getNumberOfSides()) {
-          result.append("**");
-        }
-        if (j < diceCommand.getNumberOfDices() - 1) {
-          result.append(", ");
-        }
-      }
-      result.append("] ");
-    }
-    result.append(" = ");
-    result.append(total);
-
-    return new RollResult(result.toString(), total);
-  }
-
-  public static int onlyResultRoll(String input) {
-    List<DiceCommand> command = parseInput(input);
-
-    int total = 0;
-
-    for (DiceCommand diceCommand : command) {
-      for (int value : diceCommand.roll()) {
-        total += value * diceCommand.getOperator();
-      }
-    }
-
-    return total;
+    return result;
   }
 
   class DiceRoll extends AbsCommand {
@@ -202,7 +143,12 @@ public class DiceRoller implements CommandGroup {
       if (command.size() == 1) {
         event.getChannel().sendMessage("Você precisa especificar o dado a ser rolado.").queue();
       } else {
-        onRollCommand(event, command.subList(1, command.size()).toString());
+        try {
+          onRollCommand(event, String.join(" ", command.subList(1, command.size())));
+        } catch (Exception e) {
+          event.getChannel().sendMessage("Ocorreu um erro ao rolar os dados: " + e.getMessage()).queue();
+        }
+
       }
     }
 
@@ -227,22 +173,12 @@ public class DiceRoller implements CommandGroup {
     handler.registerCommand(new DiceRoll());
   }
 
-}
-
-class RollResult {
-  private String result;
-  private int total;
-
-  public RollResult(String result, int total) {
-    this.result = result;
-    this.total = total;
+  public static RollResult[] multiRoll(String string, int i) {
+    RollResult[] results = new RollResult[i];
+    for (int j = 0; j < i; j++) {
+      results[j] = roll(string);
+    }
+    return results;
   }
 
-  public String getResult() {
-    return result;
-  }
-
-  public int getTotal() {
-    return total;
-  }
 }
