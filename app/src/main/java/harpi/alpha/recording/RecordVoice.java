@@ -31,7 +31,7 @@ public class RecordVoice implements CommandGroup {
     audioManager.openAudioConnection(channel);
     audioManager.setReceivingHandler(new RecordHandler());
     scheduledTasks.put(event.getGuild().getId(),
-        scheduler.schedule(new ResetAndSend(event, "Gravação finalizada!"), 20, TimeUnit.MINUTES));
+        scheduler.schedule(new ResetAndSend(event, "Quebra realizada!"), 20, TimeUnit.MINUTES));
   }
 
   class ResetAndSend implements Runnable {
@@ -69,6 +69,7 @@ public class RecordVoice implements CommandGroup {
   private void onStopCommand(MessageReceivedEvent event, AudioChannel channel) {
     AudioManager audioManager = channel.getGuild().getAudioManager();
     RecordHandler handler = (RecordHandler) audioManager.getReceivingHandler();
+    audioManager.setReceivingHandler(null);
     if (handler != null) {
       String filename = handler.stop();
 
@@ -151,10 +152,10 @@ public class RecordVoice implements CommandGroup {
       }
 
       event.getChannel().sendMessage("Parando...").queue();
+      onStopCommand(event, channel);
 
       scheduledTasks.get(event.getGuild().getId()).cancel(true);
 
-      onStopCommand(event, channel);
     }
 
     @Override
