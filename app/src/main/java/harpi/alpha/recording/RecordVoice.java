@@ -1,7 +1,13 @@
 package harpi.alpha.recording;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
@@ -16,11 +22,48 @@ import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.utils.FileUpload;
 
 public class RecordVoice implements CommandGroup {
+  private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+  Map<String, ScheduledFuture<?>> scheduledTasks = new HashMap<>();
 
   private void onRecordCommand(MessageReceivedEvent event, AudioChannel channel) {
+
     AudioManager audioManager = channel.getGuild().getAudioManager();
     audioManager.openAudioConnection(channel);
     audioManager.setReceivingHandler(new RecordHandler());
+    scheduledTasks.put(event.getGuild().getId(),
+        scheduler.schedule(new ResetAndSend(event, "Gravação finalizada!"), 20, TimeUnit.MINUTES));
+  }
+
+  class ResetAndSend implements Runnable {
+    private MessageReceivedEvent event;
+    private String message;
+
+    public ResetAndSend(MessageReceivedEvent event, String message) {
+      this.event = event;
+      this.message = message;
+    }
+
+    @Override
+    public void run() {
+      Member member = event.getMember();
+      if (member == null) {
+        event.getChannel().sendMessage("Você não está em um servidor!").queue();
+        return;
+      }
+      GuildVoiceState voiceState = member.getVoiceState();
+      if (voiceState == null) {
+        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+        return;
+      }
+      AudioChannel channel = voiceState.getChannel();
+      if (channel == null) {
+        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+        return;
+      }
+      event.getChannel().sendMessage(message != null ? message : "Gravação finalizada!").queue();
+      onStopCommand(event, channel);
+      onRecordCommand(event, channel);
+    }
   }
 
   private void onStopCommand(MessageReceivedEvent event, AudioChannel channel) {
@@ -66,6 +109,12 @@ public class RecordVoice implements CommandGroup {
         event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
         return;
       }
+
+      if (scheduledTasks.containsKey(event.getGuild().getId())) {
+        event.getChannel().sendMessage("Já estou gravando!").queue();
+        return;
+      }
+
       event.getChannel().sendMessage("Gravando...").queue();
 
       onRecordCommand(event, channel);
@@ -96,7 +145,14 @@ public class RecordVoice implements CommandGroup {
         event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
         return;
       }
+      if (!scheduledTasks.containsKey(event.getGuild().getId())) {
+        event.getChannel().sendMessage("Não estou gravando!").queue();
+        return;
+      }
+
       event.getChannel().sendMessage("Parando...").queue();
+
+      scheduledTasks.get(event.getGuild().getId()).cancel(true);
 
       onStopCommand(event, channel);
     }
@@ -107,9 +163,29 @@ public class RecordVoice implements CommandGroup {
     }
   }
 
+  class CheckRecording extends AbsCommand {
+
+    @Override
+    public void execute(MessageReceivedEvent event, List<String> args) {
+      if (scheduledTasks.containsKey(event.getGuild().getId())) {
+        event.getChannel().sendMessage("Estou gravando! Falta "
+            + scheduledTasks.get(event.getGuild().getId()).getDelay(TimeUnit.MINUTES) + " minutos para a quebra.")
+            .queue();
+      } else {
+        event.getChannel().sendMessage("Não estou gravando!").queue();
+      }
+    }
+
+    @Override
+    public String getName() {
+      return "checkrec";
+    }
+  }
+
   @Override
   public void registerCommands(@Nonnull CommandHandler handler) {
     handler.registerCommand(new Record());
     handler.registerCommand(new StopRecord());
+    handler.registerCommand(new CheckRecording());
   }
 }

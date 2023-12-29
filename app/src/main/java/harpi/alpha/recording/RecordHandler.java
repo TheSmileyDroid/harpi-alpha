@@ -45,29 +45,31 @@ public class RecordHandler implements AudioReceiveHandler {
   }
 
   public String stop() {
+    byte[] decodedData = null;
     try {
       audioDataLock.lock();
       int size = 0;
       for (byte[] bs : audioData) {
         size += bs.length;
       }
-      byte[] decodedData = new byte[size];
+      decodedData = new byte[size];
       int i = 0;
       for (byte[] bs : audioData) {
         for (int j = 0; j < bs.length; j++) {
           decodedData[i++] = bs[j];
         }
       }
-
       audioData.clear();
-
-      return saveRAW(decodedData);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
       audioDataLock.unlock();
     }
-    return null;
+
+    if (decodedData == null)
+      return null;
+
+    return saveRAW(decodedData);
   }
 
   private String saveRAW(byte[] data) {
