@@ -155,6 +155,7 @@ public class RecordVoice implements CommandGroup {
       onStopCommand(event, channel);
 
       scheduledTasks.get(event.getGuild().getId()).cancel(true);
+      scheduledTasks.remove(event.getGuild().getId());
 
     }
 
