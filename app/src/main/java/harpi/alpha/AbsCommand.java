@@ -21,4 +21,8 @@ public abstract class AbsCommand implements Command {
     return false;
   }
 
+  public String getDescription() {
+    return "";
+  }
+
 }

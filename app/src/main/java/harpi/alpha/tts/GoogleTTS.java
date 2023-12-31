@@ -1,4 +1,4 @@
-package tts;
+package harpi.alpha.tts;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

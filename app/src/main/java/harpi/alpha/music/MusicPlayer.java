@@ -48,6 +48,7 @@ public class MusicPlayer implements CommandGroup {
     commandHandler.registerCommand(new ListMusics());
     commandHandler.registerCommand(new Volume());
     commandHandler.registerCommand(new Loop());
+    commandHandler.registerCommand(new Smooth());
   }
 
   private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
@@ -275,6 +276,11 @@ public class MusicPlayer implements CommandGroup {
     public boolean isGuildOnly() {
       return true;
     }
+
+    @Override
+    public String getDescription() {
+      return "Coloca uma música ou playlist na fila.";
+    }
   }
 
   public class SkipMusic extends AbsCommand {
@@ -291,6 +297,11 @@ public class MusicPlayer implements CommandGroup {
     @Override
     public boolean isGuildOnly() {
       return true;
+    }
+
+    @Override
+    public String getDescription() {
+      return "Pula a música atual.";
     }
   }
 
@@ -309,6 +320,11 @@ public class MusicPlayer implements CommandGroup {
     public boolean isGuildOnly() {
       return true;
     }
+
+    @Override
+    public String getDescription() {
+      return "Para a música atual.";
+    }
   }
 
   public class PauseMusic extends AbsCommand {
@@ -325,6 +341,11 @@ public class MusicPlayer implements CommandGroup {
     @Override
     public boolean isGuildOnly() {
       return true;
+    }
+
+    @Override
+    public String getDescription() {
+      return "Pausa a música atual.";
     }
   }
 
@@ -343,6 +364,11 @@ public class MusicPlayer implements CommandGroup {
     public boolean isGuildOnly() {
       return true;
     }
+
+    @Override
+    public String getDescription() {
+      return "Retoma a música atual.";
+    }
   }
 
   public class Random extends AbsCommand {
@@ -359,6 +385,11 @@ public class MusicPlayer implements CommandGroup {
     @Override
     public boolean isGuildOnly() {
       return true;
+    }
+
+    @Override
+    public String getDescription() {
+      return "Embaralha a fila.";
     }
   }
 
@@ -377,6 +408,11 @@ public class MusicPlayer implements CommandGroup {
     public boolean isGuildOnly() {
       return true;
     }
+
+    @Override
+    public String getDescription() {
+      return "Altera o volume.";
+    }
   }
 
   public class ListMusics extends AbsCommand {
@@ -394,6 +430,11 @@ public class MusicPlayer implements CommandGroup {
     public boolean isGuildOnly() {
       return true;
     }
+
+    @Override
+    public String getDescription() {
+      return "Lista as músicas na fila.";
+    }
   }
 
   public class Loop extends AbsCommand {
@@ -404,6 +445,10 @@ public class MusicPlayer implements CommandGroup {
 
     @Override
     public void execute(MessageReceivedEvent event, List<String> command) {
+      if (command.size() < 2) {
+        event.getChannel().sendMessage("Loop: " + getGuildAudioPlayer(event.getGuild()).scheduler.isLoop()).queue();
+        return;
+      }
       setLoop(event.getChannel().asGuildMessageChannel(), Boolean.parseBoolean(command.get(1)));
     }
 
@@ -411,6 +456,43 @@ public class MusicPlayer implements CommandGroup {
     public boolean isGuildOnly() {
       return true;
     }
+
+    @Override
+    public String getDescription() {
+      return "Altera o estado de loop.";
+    }
   }
 
+  public class Smooth extends AbsCommand {
+    @Override
+    public String getName() {
+      return "smooth";
+    }
+
+    @Override
+    public void execute(MessageReceivedEvent event, List<String> command) {
+      if (command.size() < 2) {
+        event.getChannel().sendMessage("Smooth: " + getGuildAudioPlayer(event.getGuild()).scheduler.isSmooth()).queue();
+        return;
+      }
+      setSmooth(event.getChannel().asGuildMessageChannel(), Boolean.parseBoolean(command.get(1)));
+    }
+
+    @Override
+    public boolean isGuildOnly() {
+      return true;
+    }
+
+    @Override
+    public String getDescription() {
+      return "Altera o estado de smooth. (Smooth é uma técnica de transição entre músicas que deixa a transição mais suave)";
+    }
+  }
+
+  public void setSmooth(GuildMessageChannel channel, boolean value) {
+    GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
+    musicManager.scheduler.setSmooth(value);
+
+    channel.sendMessage("Smooth alterado para " + value).queue();
+  }
 }

@@ -16,4 +16,6 @@ public interface Command {
 
   String[] getAlias();
 
+  String getDescription();
+
 }

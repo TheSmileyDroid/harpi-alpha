@@ -10,12 +10,12 @@ import harpi.alpha.dice.DiceRoller;
 import harpi.alpha.music.MusicPlayer;
 import harpi.alpha.recording.EchoVoice;
 import harpi.alpha.recording.RecordVoice;
+import harpi.alpha.server.BasicCommands;
+import harpi.alpha.tts.GoogleTTS;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import server.BasicCommands;
-import tts.GoogleTTS;
 
 public class App {
     final static Logger logger = LoggerFactory.getLogger(App.class);

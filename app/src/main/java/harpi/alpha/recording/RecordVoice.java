@@ -125,6 +125,11 @@ public class RecordVoice implements CommandGroup {
     public String getName() {
       return "record";
     }
+
+    @Override
+    public String getDescription() {
+      return "Grava o áudio do canal de voz por 20 minutos. E então envia o arquivo.";
+    }
   }
 
   class StopRecord extends AbsCommand {
@@ -163,6 +168,11 @@ public class RecordVoice implements CommandGroup {
     public String getName() {
       return "stoprec";
     }
+
+    @Override
+    public String getDescription() {
+      return "Para a gravação.";
+    }
   }
 
   class CheckRecording extends AbsCommand {
@@ -181,6 +191,11 @@ public class RecordVoice implements CommandGroup {
     @Override
     public String getName() {
       return "checkrec";
+    }
+
+    @Override
+    public String getDescription() {
+      return "Verifica se estou gravando.";
     }
   }
 

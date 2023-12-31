@@ -12,6 +12,10 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 public class CommandHandler extends ListenerAdapter {
   Map<String, Command> commands = new HashMap<>();
 
+  public Map<String, Command> getCommands() {
+    return this.commands;
+  }
+
   @Override
   public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
     if (event.getAuthor().isBot()) {

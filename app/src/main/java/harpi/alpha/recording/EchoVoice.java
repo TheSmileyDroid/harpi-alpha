@@ -83,6 +83,11 @@ public class EchoVoice implements CommandGroup {
     public String getName() {
       return "leave";
     }
+
+    @Override
+    public String getDescription() {
+      return "Sai do canal de voz.";
+    }
   }
 
   private void onConnecting(AudioChannel channel, MessageChannel messageChannel) {
