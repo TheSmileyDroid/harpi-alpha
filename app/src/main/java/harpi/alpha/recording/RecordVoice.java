@@ -11,12 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
-import harpi.alpha.AbsCommand;
-import harpi.alpha.CommandGroup;
-import harpi.alpha.CommandHandler;
+import harpi.alpha.commands.AbsCommand;
+import harpi.alpha.commands.CommandGroup;
+import harpi.alpha.commands.CommandHandler;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -25,22 +26,33 @@ public class RecordVoice implements CommandGroup {
   private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   Map<String, ScheduledFuture<?>> scheduledTasks = new HashMap<>();
 
-  private void onRecordCommand(MessageReceivedEvent event, AudioChannel channel) {
+  public RecordVoice(CommandHandler handler) {
+    registerCommands(handler);
+  }
+
+  private void onRecordCommand(MessageReceivedEvent event, AudioChannel channel, String name, int part) {
 
     AudioManager audioManager = channel.getGuild().getAudioManager();
     audioManager.openAudioConnection(channel);
-    audioManager.setReceivingHandler(new RecordHandler());
+    RecordHandler handler = new RecordHandler();
+    handler.name = name;
+    handler.part = part;
+    handler.recording = true;
+    audioManager.setReceivingHandler(handler);
+
     scheduledTasks.put(event.getGuild().getId(),
-        scheduler.schedule(new ResetAndSend(event, "Quebra realizada!"), 20, TimeUnit.MINUTES));
+        scheduler.schedule(new ResetAndSend(event, name, part), 20, TimeUnit.MINUTES));
   }
 
   class ResetAndSend implements Runnable {
     private MessageReceivedEvent event;
-    private String message;
+    private String name;
+    private int part;
 
-    public ResetAndSend(MessageReceivedEvent event, String message) {
+    public ResetAndSend(MessageReceivedEvent event, String name, int part) {
       this.event = event;
-      this.message = message;
+      this.name = name;
+      this.part = part;
     }
 
     @Override
@@ -60,9 +72,9 @@ public class RecordVoice implements CommandGroup {
         event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
         return;
       }
-      event.getChannel().sendMessage(message != null ? message : "Gravação finalizada!").queue();
+      event.getChannel().sendMessage("Gravação de " + name + " (" + part + ")").queue();
       onStopCommand(event, channel);
-      onRecordCommand(event, channel);
+      onRecordCommand(event, channel, name, part++);
     }
   }
 
@@ -73,10 +85,13 @@ public class RecordVoice implements CommandGroup {
     if (handler != null) {
       String filename = handler.stop();
 
-      String filenameConverted = filename.replace(".wav", ".mp3");
+      event.getChannel().sendMessage("Enviando gravação: " + handler.name + " Parte " + handler.part).queue();
+
+      String filenameConverted = filename.replace(".wav", "_" + handler.name + "_" + handler.part + ".mp3");
 
       // Convert to mp3 using ffmpeg; 48KHz 16bit stereo signed BigEndian PCM.
       String[] cmd = { "ffmpeg", "-y", "-i", filename, "-f", "mp3",
+          "-metadata", "title=" + handler.name + " parte " + handler.part,
           "-acodec", "libmp3lame", filenameConverted };
       try {
         Process p = Runtime.getRuntime().exec(cmd);
@@ -97,28 +112,37 @@ public class RecordVoice implements CommandGroup {
     public void execute(MessageReceivedEvent event, List<String> args) {
       Member member = event.getMember();
       if (member == null) {
-        event.getChannel().sendMessage("Você não está em um servidor!").queue();
+        sendErrorMessage(event.getChannel(), "You are not in a voice channel");
         return;
       }
       GuildVoiceState voiceState = member.getVoiceState();
       if (voiceState == null) {
-        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+        sendErrorMessage(event.getChannel(), "You are not in a voice channel");
         return;
       }
-      AudioChannel channel = voiceState.getChannel();
-      if (channel == null) {
-        event.getChannel().sendMessage("Você não está em um canal de voz!").queue();
+      AudioChannel voiceChannel = voiceState.getChannel();
+      if (voiceChannel == null) {
+        sendErrorMessage(event.getChannel(), "You are not in a voice channel");
         return;
       }
 
       if (scheduledTasks.containsKey(event.getGuild().getId())) {
-        event.getChannel().sendMessage("Já estou gravando!").queue();
+        sendErrorMessage(event.getChannel(), "Already recording");
         return;
       }
 
-      event.getChannel().sendMessage("Gravando...").queue();
+      String name = String.join(" ", args.subList(1, args.size()));
+      if (name.isEmpty()) {
+        name = "recording";
+      }
 
-      onRecordCommand(event, channel);
+      event.getChannel().sendMessage("Gravando... " + name).queue();
+
+      onRecordCommand(event, voiceChannel, name, 1);
+    }
+
+    private void sendErrorMessage(MessageChannelUnion messageChannelUnion, String message) {
+      messageChannelUnion.sendMessage(message).queue();
     }
 
     @Override
@@ -128,7 +152,7 @@ public class RecordVoice implements CommandGroup {
 
     @Override
     public String getDescription() {
-      return "Grava o áudio do canal de voz por 20 minutos. E então envia o arquivo.";
+      return "Grava o áudio do canal de voz por até 20 minutos. E então envia o arquivo.";
     }
   }
 
@@ -156,7 +180,6 @@ public class RecordVoice implements CommandGroup {
         return;
       }
 
-      event.getChannel().sendMessage("Parando...").queue();
       onStopCommand(event, channel);
 
       scheduledTasks.get(event.getGuild().getId()).cancel(true);

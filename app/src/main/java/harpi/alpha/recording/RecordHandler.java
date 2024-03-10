@@ -22,6 +22,9 @@ public class RecordHandler implements AudioReceiveHandler {
 
   private List<byte[]> audioData = new ArrayList<>();
   private Lock audioDataLock = new ReentrantLock();
+  public boolean recording = false;
+  public String name = "";
+  public int part = 0;
 
   @Override
   public boolean canReceiveCombined() {
@@ -45,6 +48,7 @@ public class RecordHandler implements AudioReceiveHandler {
   }
 
   public String stop() {
+    recording = false;
     byte[] decodedData = null;
     try {
       audioDataLock.lock();

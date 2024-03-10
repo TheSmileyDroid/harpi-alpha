@@ -1,4 +1,4 @@
-package harpi.alpha;
+package harpi.alpha.commands;
 
 import java.util.HashMap;
 import java.util.List;

@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.annotation.Nonnull;
 
-import harpi.alpha.AbsCommand;
-import harpi.alpha.CommandGroup;
-import harpi.alpha.CommandHandler;
+import harpi.alpha.commands.AbsCommand;
+import harpi.alpha.commands.CommandGroup;
+import harpi.alpha.commands.CommandHandler;
 import net.dv8tion.jda.api.audio.AudioReceiveHandler;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.audio.CombinedAudio;
@@ -22,6 +22,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 public class EchoVoice implements CommandGroup {
+
+  public EchoVoice(CommandHandler handler) {
+    registerCommands(handler);
+  }
 
   class Echo extends AbsCommand {
 

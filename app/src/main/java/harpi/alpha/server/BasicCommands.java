@@ -4,13 +4,17 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import harpi.alpha.AbsCommand;
-import harpi.alpha.CommandGroup;
-import harpi.alpha.CommandHandler;
+import harpi.alpha.commands.AbsCommand;
+import harpi.alpha.commands.CommandGroup;
+import harpi.alpha.commands.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public class BasicCommands implements CommandGroup {
+
+  public BasicCommands(CommandHandler handler) {
+    registerCommands(handler);
+  }
 
   @Override
   public void registerCommands(@Nonnull CommandHandler handler) {

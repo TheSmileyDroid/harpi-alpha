@@ -8,14 +8,17 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
-import harpi.alpha.AbsCommand;
-import harpi.alpha.CommandGroup;
-import harpi.alpha.CommandHandler;
-import harpi.alpha.dice.extra.RollResult;
+import harpi.alpha.commands.AbsCommand;
+import harpi.alpha.commands.CommandGroup;
+import harpi.alpha.commands.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public class DiceRoller implements CommandGroup {
+
+  public DiceRoller(CommandHandler handler) {
+    registerCommands(handler);
+  }
 
   private void onRollCommand(MessageReceivedEvent event, String input) throws Exception {
     String finalString;
@@ -59,10 +62,9 @@ public class DiceRoller implements CommandGroup {
     }
 
     EmbedBuilder embed = new EmbedBuilder();
-    embed.setTitle("Resultado");
     embed.setDescription(finalString);
     embed.setColor(0xffe663);
-    event.getChannel().sendMessageEmbeds(embed.build()).queue();
+    event.getMessage().replyEmbeds(embed.build()).queue();
   }
 
   public static int rollDie(int sides) {
@@ -141,12 +143,12 @@ public class DiceRoller implements CommandGroup {
     @Override
     public void execute(MessageReceivedEvent event, List<String> command) {
       if (command.size() == 1) {
-        event.getChannel().sendMessage("Você precisa especificar o dado a ser rolado.").queue();
+        event.getMessage().reply("Você precisa especificar o dado a ser rolado.").queue();
       } else {
         try {
           onRollCommand(event, String.join(" ", command.subList(1, command.size())));
         } catch (Exception e) {
-          event.getChannel().sendMessage("Ocorreu um erro ao rolar os dados: " + e.getMessage()).queue();
+          event.getMessage().reply("Ocorreu um erro ao rolar os dados: " + e.getMessage()).queue();
         }
 
       }

@@ -1,8 +1,6 @@
-package harpi.alpha.dice.extra;
+package harpi.alpha.dice;
 
 import java.util.List;
-
-import harpi.alpha.dice.RollComponent;
 
 public class RollResult {
   private List<RollComponent> components;

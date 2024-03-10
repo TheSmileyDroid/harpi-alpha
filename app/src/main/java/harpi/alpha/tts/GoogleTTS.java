@@ -6,9 +6,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import harpi.alpha.AbsCommand;
-import harpi.alpha.CommandGroup;
-import harpi.alpha.CommandHandler;
+import harpi.alpha.commands.AbsCommand;
+import harpi.alpha.commands.CommandGroup;
+import harpi.alpha.commands.CommandHandler;
 import harpi.alpha.music.MusicPlayer;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
@@ -18,8 +18,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 public class GoogleTTS implements CommandGroup {
   private final MusicPlayer player;
 
-  public GoogleTTS(MusicPlayer player) {
+  public GoogleTTS(CommandHandler handler, MusicPlayer player) {
     this.player = player;
+
+    registerCommands(handler);
   }
 
   @Override

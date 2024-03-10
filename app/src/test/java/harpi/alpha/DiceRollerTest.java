@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 import harpi.alpha.dice.DiceRoller;
-import harpi.alpha.dice.extra.RollResult;
+import harpi.alpha.dice.RollResult;
 
 class DiceRollerTest {
 
