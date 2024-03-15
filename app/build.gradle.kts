@@ -23,7 +23,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.4.14")
 
-    implementation ("dev.arbjerg:lavaplayer:2.0.4")
+    implementation ("dev.arbjerg:lavaplayer:2.1.1")
 
     implementation("javazoom:jlayer:1.0.1")
 
