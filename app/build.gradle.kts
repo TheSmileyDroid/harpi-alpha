@@ -2,6 +2,7 @@ plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id ("com.github.ben-manes.versions") version "0.51.0"
 }
 
 repositories {
@@ -10,11 +11,11 @@ repositories {
     maven { url = uri("https://jitpack.io") } 
 }
 
-val jdaVersion = "5.0.0-beta.18"
+val jdaVersion = "5.0.0-beta.21"
 
 dependencies {
     // Use JUnit Jupiter for testing.
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 
     // This dependency is used by the application.
     implementation("com.google.guava:guava:31.1-jre")
@@ -23,7 +24,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.4.14")
 
-    implementation ("dev.arbjerg:lavaplayer:2.1.1")
+    implementation ("com.github.devoxin:lavaplayer:1.8.0")
 
     implementation("javazoom:jlayer:1.0.1")
 

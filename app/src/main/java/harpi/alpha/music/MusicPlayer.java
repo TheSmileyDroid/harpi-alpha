@@ -224,7 +224,6 @@ public class MusicPlayer implements CommandGroup {
           (playing.getInfo().length / 1000) % 60);
       if (current != null)
         embedBuilder.addField("Playing", current, false);
-      embedBuilder.setImage(playing.getInfo().artworkUrl);
     }
 
     String volume = String.valueOf(musicManager.player.getVolume());
